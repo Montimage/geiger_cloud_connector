@@ -1,0 +1,29 @@
+{
+  "name": "geiger-cloud-connector",
+  "version": "1.0.0",
+  "description": "A module to work with Geiger Cloud",
+  "main": "geiger-cloud-connector.js",
+  "scripts": {
+    "test": "node geiger-cloud-connector-test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Montimage/geiger_cloud_connector.git"
+  },
+  "keywords": [
+    "geiger"
+  ],
+  "author": "Montimage",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Montimage/geiger_cloud_connector/issues"
+  },
+  "homepage": "https://github.com/Montimage/geiger_cloud_connector#readme",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "uuid": "^9.0.0"
+  }
+}
