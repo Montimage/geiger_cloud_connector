@@ -1,4 +1,4 @@
-const {createCompany, loadConfig, registerPlugin, sendSensorData, sendRecommendation, sendRecommendationStatus, getAllCompany, getAllSensorDatas, getAllEventByType, getAllRecommendations, getAllRecommendationStatus} = require('./geiger-cloud-connector');
+const {createCompany, loadConfig, registerPlugin, sendSensorData, sendRecommendation, sendRecommendationStatus, getAllCompany, getAllSensorDatas, getAllEventByType, getAllRecommendations, getAllRecommendationStatus, getGeigerInfo} = require('./geiger-cloud-connector');
 
 loadConfig();
 
@@ -17,11 +17,11 @@ loadConfig();
 //   }
 // });
 
-getAllCompany((companies) => {
-  if (companies!=null) {
-    console.info(companies);
-  }
-});
+// getAllCompany((companies) => {
+//   if (companies!=null) {
+//     console.info(companies);
+//   }
+// });
 
 // deleteCompany('montimage-company-id', (result) => {
 //     if (result!= null) {
@@ -98,3 +98,7 @@ getAllCompany((companies) => {
 // getAllSensorDatas((result) => {
 //     console.log('result: ', result);
 //   });
+
+
+const info = getGeigerInfo();
+console.log(info);

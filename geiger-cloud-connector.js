@@ -498,6 +498,20 @@ const getAllRecommendationStatus = (callback) =>{
   return getAllEventByType('sensorStatus', callback);
 };
 
+const getGeigerInfo = () => {
+  if (!config) {
+    loadConfig();
+  }
+
+  return {
+    id_company: config.id_company,
+    company: config.company,
+    plugin_id: config.plugin_id,
+    plugin: config.plugin,
+    owner_id: config.owner_id,
+  };
+};
+
 module.exports = {
   loadConfig,
   createCompany,
@@ -511,5 +525,7 @@ module.exports = {
   getAllEventByType,
   getAllSensorDatas,
   getAllRecommendations,
-  getAllRecommendationStatus
-}
+  getAllRecommendationStatus,
+  getGeigerInfo
+};
+
