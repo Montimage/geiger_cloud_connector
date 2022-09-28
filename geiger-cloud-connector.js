@@ -2,8 +2,6 @@ const {
   v4: uuidv4
 } = require("uuid");
 
-const fs = require("fs");
-
 const {
   getRequest,
   postRequest,
@@ -12,8 +10,30 @@ const {
 } = require('./utils');
 
 const GEIGER_CLOUD_CONFIGURATION = `${__dirname}/config.json`;
+const UNRESOLVED_RECOMMENDATIONS_PATH = `${__dirname}/recommendationIds.json`;
 
 let config = null;
+let unresolveRecommendations = [];
+const loadUnresolvedRecommendations = () => {
+  if (unresolveRecommendations.length === 0) {
+    let recs = readJSONFileSync(UNRESOLVED_RECOMMENDATIONS_PATH);
+    if (recs) {
+      unresolveRecommendations = recs.recommendations??[];
+    }
+  }
+};
+
+const updateUnresolveRecommendations = () => {
+  return writeToFile(UNRESOLVED_RECOMMENDATIONS_PATH, JSON.stringify({recommendations: unresolveRecommendations}),(err, ret) => {
+    if (err) {
+      console.error('Failed to update the unresolved recommendation list');
+    } else {
+      console.log('The unresolved recommendation list has been updated!');
+    }
+  });
+};
+
+
 /**
  * Load the configuration file
  */
@@ -34,6 +54,8 @@ const loadConfig = () => {
   if (!config.geigerAPIURL) {
     console.warn('Missing geigerAPIURL');
   }
+
+  loadUnresolvedRecommendations();
 };
 
 
@@ -289,13 +311,12 @@ const sendEvent = ({
     id_event: eventId,
     tlp: "GREEN"
   };
-  console.log('url: ', url);
-  console.log('postData: ');
-  console.log(postData);
+  console.log(`url: ${url}`);
+  console.log(`postData: ${JSON.stringify(postData)}`);
   postRequest(url, postData, (err, data) => {
     if (err) {
-      console.error('Failed to send an event of company: ', id_company);
-      console.error(err.response);
+      console.error(`Failed to send an event of company: ${config.id_company}`);
+      console.error(err);
       console.error({
         content,
         type,
@@ -303,7 +324,8 @@ const sendEvent = ({
       });
       return callback(null);
     } else {
-      return callback(data);
+      console.log(`Successfully: ${JSON.stringify(data)}`);
+      return callback(postData);
     }
   });
 };
@@ -344,7 +366,7 @@ const sendSensorData = ({
     geigerValue,
     maxValue,
     minValue,
-    name,
+    name: name ?? config.pluginName,
     pluginId: config.plugin_id,
     relation,
     threatsImpact,
@@ -372,6 +394,18 @@ const sendRecommendation = ({
   relatedThreatsWeights,
   shortDescription
 }, callback) => {
+  if (unresolveRecommendations && unresolveRecommendations.indexOf(recommendationId) > -1) {
+    console.warn(`Recommendation ${recommendationId} has not been resolved yet!`);
+    return callback({
+      action,
+      costs,
+      longDescription,
+      recommendationId,
+      recommendationType,
+      relatedThreatsWeights,
+      shortDescription
+    });
+  }
   if (!config.id_company) {
     console.error('Cannot send data. Missing company id.');
     return callback(null);
@@ -403,7 +437,15 @@ const sendRecommendation = ({
   return sendEvent({
     content: JSON.stringify(content),
     type: "sensorRecommendation",
-  }, callback);
+  }, (data) => {
+    if (data) {
+      unresolveRecommendations.push(recommendationId);
+      updateUnresolveRecommendations();
+      return callback(data);
+    } else {
+      return callback(null);
+    }
+  });
 };
 
 /**
@@ -448,7 +490,24 @@ const sendRecommendationStatus = (
   return sendEvent({
     content: JSON.stringify(content),
     type: "sensorStatus",
-  }, callback);
+  }, (data) => {
+    if (data) {
+      if (unresolveRecommendations) {
+        const index = unresolveRecommendations.indexOf(recommendationId);
+        if (index > -1) {
+          unresolveRecommendations.splice(index, 1);
+        }
+        // unresolveRecommendations.push(recommendationId);
+        updateUnresolveRecommendations();
+      }
+
+      return callback({
+        recommendationId
+      });
+    } else {
+      return callback(null);
+    }
+  });
 };
 
 /**
@@ -467,13 +526,13 @@ const getAllEventByType = (type, callback) => {
   const headers = {
     owner: config.owner_id,
     type
-  }
+  };
 
   const url = `${config.geigerAPIURL}/store/events`;
   getRequest(url, (err, data) => {
     if (err) {
-      console.error('Failed to get all event of type: ', type);
-      console.error(err.response);
+      console.error(`Failed to get all event of type: ${type}`);
+      console.error(err);
       return callback(null);
     } else {
       return callback(data);
@@ -486,15 +545,15 @@ const getAllEventByType = (type, callback) => {
  * @param {*} callback
  * @returns
  */
-const getAllRecommendations = (callback) =>{
+const getAllRecommendations = (callback) => {
   return getAllEventByType('sensorRecommendation', callback);
 };
 
-const getAllSensorDatas = (callback) =>{
+const getAllSensorDatas = (callback) => {
   return getAllEventByType('sensorCloudConnected', callback);
 };
 
-const getAllRecommendationStatus = (callback) =>{
+const getAllRecommendationStatus = (callback) => {
   return getAllEventByType('sensorStatus', callback);
 };
 
@@ -512,6 +571,8 @@ const getGeigerInfo = () => {
   };
 };
 
+loadConfig();
+
 module.exports = {
   loadConfig,
   createCompany,
@@ -528,4 +589,3 @@ module.exports = {
   getAllRecommendationStatus,
   getGeigerInfo
 };
-

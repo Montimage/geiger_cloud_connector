@@ -63,14 +63,16 @@ loadConfig();
 //   }
 // });
 
+const timestamp = Date.now();
+
 // sendRecommendation(
 //   {
 //     action: "",
 //     costs: "False",
-//     longDescription: "long description of the first recommendation",
+//     longDescription: `Testing recommendation - ${timestamp}`,
 //     recommendationType: "device",
 //     relatedThreatsWeights: "1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;",
-//     shortDescription: "short desc of the first recommendation"
+//     shortDescription: `Recommendation 01 - ${timestamp}`
 // }, (result) => {
 //   if (result != null) {
 //     console.info(result);
@@ -91,14 +93,15 @@ loadConfig();
 //   console.log('result: ', result);
 // });
 
-// getAllRecommendationStatus((result) => {
-//   console.log('result: ', result);
-// });
+getAllRecommendationStatus((result) => {
+  console.log(`Total number of data: ${result.length}`);
+  console.log('result: ', result);
+});
 
 // getAllSensorDatas((result) => {
 //     console.log('result: ', result);
 //   });
 
 
-const info = getGeigerInfo();
-console.log(info);
+// const info = getGeigerInfo();
+// console.log(info);
