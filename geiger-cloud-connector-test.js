@@ -1,4 +1,4 @@
-const {createCompany, loadConfig, registerPlugin, sendSensorData, sendRecommendation, sendRecommendationStatus, getAllCompany, getAllSensorDatas, getAllEventByType, getAllRecommendations, getAllRecommendationStatus, getGeigerInfo} = require('./geiger-cloud-connector');
+const {createCompany, loadConfig, registerPlugin, sendSensorData, sendRecommendation, sendRecommendationStatus, getAllCompany, getAllSensorDatas, getAllEventByType, getAllRecommendations, getAllRecommendationStatus, getGeigerInfo, registerPluginWithCompanyId} = require('./geiger-cloud-connector');
 
 loadConfig();
 
@@ -31,12 +31,17 @@ loadConfig();
 //   })
 
 // registerPlugin({
+//   id_company: "what-the-hell",
 //   description: "Montimage IDS - provides security reports",
 //   name: "Montimage IDS"
 // }, (data) => {
 //   if (data!=null) {
 //     console.log(data);
 //   }
+// });
+
+// registerPluginWithCompanyId("what-the-hell", (data) => {
+//     console.log(data);
 // });
 
 // getPlugin('aa73c59a-9fde-4f6e-8130-1bdecf614950', (data) => {
@@ -65,21 +70,21 @@ loadConfig();
 
 const timestamp = Date.now();
 
-// sendRecommendation(
-//   {
-//     action: "",
-//     costs: "False",
-//     longDescription: `Testing recommendation - ${timestamp}`,
-//     recommendationType: "device",
-//     relatedThreatsWeights: "1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;",
-//     shortDescription: `Recommendation 01 - ${timestamp}`
-// }, (result) => {
-//   if (result != null) {
-//     console.info(result);
-//   }
-// });
+sendRecommendation(
+  {
+    action: "",
+    costs: "False",
+    longDescription: `Testing recommendation - ${timestamp}`,
+    recommendationType: "device",
+    relatedThreatsWeights: "1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;",
+    shortDescription: `Recommendation 01 - ${timestamp}`
+}, (result) => {
+  if (result != null) {
+    console.info(result);
+  }
+});
 
-// sendRecommendationStatus("f978966b-81b4-4d90-8708-a07c9c8086d9", (result) => {
+// sendRecommendationStatus("119b3018-0243-45d9-b26b-ea86bfbc859c", (result) => {
 //     if (result != null) {
 //       console.info(result);
 //     }
@@ -93,10 +98,10 @@ const timestamp = Date.now();
 //   console.log('result: ', result);
 // });
 
-getAllRecommendationStatus((result) => {
-  console.log(`Total number of data: ${result.length}`);
-  console.log('result: ', result);
-});
+// getAllRecommendationStatus((result) => {
+//   console.log(`Total number of data: ${result.length}`);
+//   console.log('result: ', result);
+// });
 
 // getAllSensorDatas((result) => {
 //     console.log('result: ', result);
