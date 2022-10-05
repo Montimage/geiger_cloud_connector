@@ -109,11 +109,13 @@ const writeToFile = (_filePath, data, callback, isOverwrite = true) => {
   }
 };
 
+const getUUID = () => v4();
+
 module.exports ={
   getRequest,
   postRequest,
   deleteRequest,
   writeToFile,
   readJSONFile,
-  readJSONFileSync
+  readJSONFileSync,
 };
