@@ -1,23 +1,7 @@
 {
     "geigerAPIURL": "https://37.48.101.252:8443/geiger-cloud/api",
-    "id_company": "montimage-company-id",
-    "company_name": "Montimage",
-    "company": {
-        "company_name": "Montimage",
-        "company_users": [],
-        "email": "company_02@montimage.com",
-        "founding_date": "2022-09-20T21:05:46.607Z",
-        "companyId": "montimage-company-id",
-        "location": "Paris",
-        "public_key": ""
-    },
     "plugin": {
-        "companyName": "Montimage",
-        "id": "104b0b03-8c40-423c-9398-ff8808be2fa6",
         "name": "Montimage IDS",
-        "description": "Montimage IDS - provides security reports"
-    },
-    "plugin_registered": true,
-    "owner_id": "mmtbox-geiger-001",
-    "plugin_id": "104b0b03-8c40-423c-9398-ff8808be2fa6"
+        "description": "Montimage IDS aims to protect your devices from cyber-security attacks"
+    }
 }
