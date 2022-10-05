@@ -1,0 +1,7 @@
+{
+    "geigerAPIURL": "https://37.48.101.252:8443/geiger-cloud/api",
+    "plugin": {
+        "name": "Montimage IDS",
+        "description": "Montimage IDS aims to protect your devices from cyber-security attacks"
+    }
+}
