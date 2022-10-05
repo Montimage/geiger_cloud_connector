@@ -14,17 +14,22 @@ const UNRESOLVED_RECOMMENDATIONS_PATH = `${__dirname}/recommendationIds.json`;
 
 let config = null;
 let unresolveRecommendations = [];
+
+const getConfig = () => config;
+
 const loadUnresolvedRecommendations = () => {
   if (unresolveRecommendations.length === 0) {
     let recs = readJSONFileSync(UNRESOLVED_RECOMMENDATIONS_PATH);
     if (recs) {
-      unresolveRecommendations = recs.recommendations??[];
+      unresolveRecommendations = recs.recommendations ?? [];
     }
   }
 };
 
 const updateUnresolveRecommendations = () => {
-  return writeToFile(UNRESOLVED_RECOMMENDATIONS_PATH, JSON.stringify({recommendations: unresolveRecommendations}),(err, ret) => {
+  return writeToFile(UNRESOLVED_RECOMMENDATIONS_PATH, JSON.stringify({
+    recommendations: unresolveRecommendations
+  }), (err, ret) => {
     if (err) {
       console.error('Failed to update the unresolved recommendation list');
     } else {
@@ -43,13 +48,13 @@ const loadConfig = () => {
     console.warn('id_company is not set');
   }
 
-  if (!config.plugin_id) {
-    console.warn('plugin_id is not set');
-  }
+  // if (!config.plugin_id) {
+  //   console.warn('plugin_id is not set');
+  // }
 
-  if (!config.owner_id) {
-    console.warn('owner_id is not set');
-  }
+  // if (!config.owner_id) {
+  //   console.warn('owner_id is not set');
+  // }
 
   if (!config.geigerAPIURL) {
     console.warn('Missing geigerAPIURL');
@@ -62,14 +67,45 @@ const loadConfig = () => {
 /**
  * Update the configuration file
  */
-const updateConfig = () => {
+const updateConfig = (callback) => {
+  console.log(`[updateConfig] Going to save a new config:\n ${JSON.stringify(config)}`);
+  if (!config.id_company && config.company && config.company.id_company) {
+    config.id_company = config.company.id_company;
+  }
+
+  if (!config.plugin_id && config.plugin && config.plugin.plugin_id) {
+    config.plugin_id = config.plugin.plugin_id;
+  }
+
+  // if (!config.owner_id) {
+  //   config.owner_id = uuidv4();
+  // }
+
   writeToFile(GEIGER_CLOUD_CONFIGURATION, JSON.stringify(config), (err, result) => {
     if (err) {
       console.error('Failed to update the configuration');
       console.error(err);
+      return callback(null);
     } else {
       console.log('Configuration has been updated');
       console.log(config);
+      return callback(config);
+    }
+  });
+};
+
+const updateConfigWithChangedValue = (key, newValue, callback) => {
+  config[key] = newValue;
+  console.log(`[updateConfigWithChangedValue] Going to save a new config:\n ${JSON.stringify(config)}`);
+  writeToFile(GEIGER_CLOUD_CONFIGURATION, JSON.stringify(config), (err, result) => {
+    if (err) {
+      console.error('Failed to update the configuration');
+      console.error(err);
+      return callback(err);
+    } else {
+      console.log('Configuration has been updated');
+      console.log(config);
+      return callback(null, config);
     }
   });
 };
@@ -156,41 +192,69 @@ const createCompany = ({
         location,
         public_key
       };
-      updateConfig();
-      return callback(id_company);
+      updateConfig((newConfig) => {
+        if (!newConfig) {
+          console.log(`Failed to update new configuration`);
+
+        }
+        return callback(id_company);
+      });
+
     }
   });
 };
 
 /**
  * Update the company information with given company id
- * @param {Function} callback
+ * @param {Function} callback {error, company}
  * @returns
  */
-const updateCompanyInfo = (callback) => {
-  if (!config.id_company) {
+const updateCompanyInfo = ( id_company, callback) => {
+  if (!config.id_company && !id_company) {
     console.error('id_company is not set. Please specify your company id');
-    return callback(null);
+    return callback({error: 'Please provide company id'});
   } else {
-    const url = `${config.geigerAPIURL}/store/company/${config.id_company}`;
+    const companyId = id_company ? id_company : config.id_company;
+    console.log(`Company Id: ${companyId}`);
+    const url = `${config.geigerAPIURL}/store/company/${companyId}`;
     getRequest(url, (err, company) => {
       if (err) {
-        console.log('Failed to get company with id: ', config.id_company);
-        console.error(err);
-        return callback(null);
+        console.log(`Failed to get company with id: ${companyId}`);
+        console.log(err.response);
+        return callback({error: `Failed to get company info`});
       } else {
         config.company = company;
         config.plugin.companyName = company.name;
         config.company_name = company.name;
-        updateConfig();
-        return callback(company);
+        updateConfig((newConfig) => {
+          if (!newConfig) {
+            console.log(`Failed to update new config`);
+          }
+          return callback({company});
+        });
       }
     });
   }
-}
-
+};
 
 ///////////// PLUGIN ///////////////////
+// const registerPluginWithDefaultInfo = (callback) => {
+//   if (!config.plugin.description || !config.plugin.name) {
+//     console.error('There is no plugin information');
+//     return callback({
+//       error: 'No plugin information'
+//     });
+//   }
+
+//   let pluginId = config.plugin_id;
+//   if (!pluginId) pluginId = uuidv4();
+
+//   return registerPlugin({
+//     description: config.plugin.description,
+//     id: pluginId,
+//     name: config.plugin.name
+//   }, callback);
+// };
 /**
  * Register a plugin
  * @param {*} param0
@@ -198,63 +262,60 @@ const updateCompanyInfo = (callback) => {
  * @returns
  */
 const registerPlugin = ({
-  // companyName,
+  company_name,
+  id_company,
   description,
   id,
   name
 }, callback) => {
 
-  if (!config.id_company) {
+  if (!config.id_company && !id_company) {
     console.error('Missing company id! Cannot register the plugin: ', id);
-    return callback(null);
+    return callback({error: 'Missing company ID'});
   }
 
-  if (!config.company_name) {
+  if (!config.company_name && !company_name) {
     console.error('Missing company name! Going to get the company information');
-    updateCompanyInfo((company) => {
-      if (!company) {
-        console.error('Cannot register the plugin: ', id);
-        return callback(null);
+    updateCompanyInfo( id_company, (data) => {
+      const {error, company} = data;
+      if (error) {
+        console.error(`Cannot register the plugin: ${id}`);
+        return callback({error});
       } else {
         return registerPlugin({
-          // companyName,
+          id_company: company.id_company,
+          company_name: company.company_name,
           description,
           id,
           name
         }, callback);
       }
     });
-  }
-
-  // if (config.company_name !== companyName) {
-  // console.warn('Company name is not correct! The correct company name is: ', config.company_name);
-  // return callback(null);
+  } else {
+    // if (config.company_name !== company_name) {
+  //   console.warn(`Company name is not correct! The given company name is: ${company_name}`);
+  //   return callback({error: 'Company name is not matched'});
   // }
 
   if (config.plugin_registered == true && config.plugin) {
     console.log('Plugin has been registered already!');
-    return callback(config.plugin);
+    return callback({geigerInfo: getGeigerInfo()});
   }
 
   const url = `${config.geigerAPIURL}/plugin`;
   let pluginId = id ? id : (config.plugin_id ? config.plugin_id : uuidv4());
-  postRequest(url, {
-    companyName: config.company_name,
+  let postData = {
+    companyName: company_name ? company_name : config.company_name,
     description,
     id: pluginId,
     name
-  }, (err, data) => {
+  };
+  postRequest(url, postData, (err, data) => {
     if (err) {
-      console.log('Failed to register a plugin');
-      console.error(err.response.status);
-      console.log('Plugin data: ');
-      console.log({
-        companyName: config.company_name,
-        description,
-        id: pluginId,
-        name
-      });
-      return callback(null);
+      console.log(`Failed to register a plugin:\n ${JSON.stringify(err)}`);
+      console.log(err);
+      console.log(`Plugin data: ${JSON.stringify(postData)}`);
+      return callback({error: `Failed to register a plugin`});
     } else {
       config.plugin_id = pluginId;
       config.plugin = {
@@ -264,10 +325,33 @@ const registerPlugin = ({
         description
       };
       config.plugin_registered = true;
-      updateConfig();
-      return callback(data);
+      if (!config.id_company) {
+        updateCompanyInfo(id_company, (companyInfo) => {
+          const {error, company} = companyInfo;
+          if (error) {
+            console.log(`Failed to update company info of ${id_company}`);
+            return callback({error});
+          } else {
+            return callback({geigerInfo: getGeigerInfo()});
+          }
+        });
+      } else {
+        updateConfig((newConfig) => {
+          if (!newConfig) {
+            console.log(`Failed to update new config`);
+          }
+          return callback({geigerInfo: getGeigerInfo()});
+        });
+      }
     }
   });
+  }
+
+
+};
+
+const registerPluginWithCompanyId = (companyId, callback) => {
+  registerPlugin({...config.plugin,id_company: companyId, }, callback);
 };
 
 // const getPlugin = (pluginId, callback) => {
@@ -294,40 +378,38 @@ const sendEvent = ({
     return callback(null);
   }
 
-  if (!config.owner_id) {
-    console.warn('Missing owner_id. Going to generate once');
-    config.owner_id = uuidv4();
-    updateConfig();
-  }
-
-  const url = `${config.geigerAPIURL}/store/company/${config.id_company}/event`;
   const eventId = id_event ? id_event : uuidv4();
-  const postData = {
-    content,
-    encoding: "ascii",
-    language: 'en',
-    owner: config.owner_id,
-    type,
-    id_event: eventId,
-    tlp: "GREEN"
-  };
-  console.log(`url: ${url}`);
-  console.log(`postData: ${JSON.stringify(postData)}`);
-  postRequest(url, postData, (err, data) => {
-    if (err) {
-      console.error(`Failed to send an event of company: ${config.id_company}`);
-      console.error(err);
-      console.error({
-        content,
-        type,
-        id_event
-      });
-      return callback(null);
-    } else {
-      console.log(`Successfully: ${JSON.stringify(data)}`);
-      return callback(postData);
-    }
-  });
+  _sendEvent(content,eventId,type,callback);
+};
+
+const _sendEvent = (content, eventId, type,callback) => {
+  const url = `${config.geigerAPIURL}/store/company/${config.id_company}/event`;
+        const postData = {
+          content,
+          encoding: "ascii",
+          language: 'en',
+          owner: config.id_company,
+          type,
+          id_event: eventId,
+          tlp: "GREEN"
+        };
+        console.log(`url: ${url}`);
+        console.log(`postData: ${JSON.stringify(postData)}`);
+        postRequest(url, postData, (err, data) => {
+          if (err) {
+            console.error(`Failed to send an event of company: ${config.id_company}`);
+            console.error(err);
+            console.error({
+              content,
+              type,
+              id_event
+            });
+            return callback(null);
+          } else {
+            console.log(`Successfully: ${JSON.stringify(data)}`);
+            return callback(postData);
+          }
+        });
 };
 
 /**
@@ -366,7 +448,7 @@ const sendSensorData = ({
     geigerValue,
     maxValue,
     minValue,
-    name: name ?? config.pluginName,
+    name: name ? name: config.plugin ? config.plugin.name : 'Montimage IDS',
     pluginId: config.plugin_id,
     relation,
     threatsImpact,
@@ -518,13 +600,13 @@ const sendRecommendationStatus = (
  */
 const getAllEventByType = (type, callback) => {
 
-  if (!config.owner_id) {
-    console.log(`Cannot get all event of: ${type}. Missing owner id`);
-    return callback(null);
-  }
+  // if (!config.owner_id) {
+  //   console.log(`Cannot get all event of: ${type}. Missing owner id`);
+  //   return callback(null);
+  // }
 
   const headers = {
-    owner: config.owner_id,
+    owner: config.id_company,
     type
   };
 
@@ -563,11 +645,11 @@ const getGeigerInfo = () => {
   }
 
   return {
-    id_company: config.id_company,
+    id_company: config.id_company ? config.id_company : config.company ? config.company.id_company:null,
     company: config.company,
-    plugin_id: config.plugin_id,
+    plugin_id: config.plugin_id ? config.plugin_id : config.plugin.plugin_id,
     plugin: config.plugin,
-    owner_id: config.owner_id,
+    owner_id: config.id_company,
   };
 };
 
@@ -587,5 +669,9 @@ module.exports = {
   getAllSensorDatas,
   getAllRecommendations,
   getAllRecommendationStatus,
-  getGeigerInfo
+  getGeigerInfo,
+  updateConfigWithChangedValue,
+  // registerPluginWithDefaultInfo,
+  getConfig,
+  registerPluginWithCompanyId
 };
