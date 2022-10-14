@@ -22,7 +22,12 @@ const getAxiosClient = () => {
   return _axiosClient;
 };
 
-
+/**
+ *
+ * @param {*} url end point
+ * @param {*} callback (error, data) =>
+ * @param {*} headers optional
+ */
 const getRequest = (url, callback, headers) => {
   const axiosClient = getAxiosClient();
   axiosClient.get(url, {headers})
@@ -35,6 +40,20 @@ const getRequest = (url, callback, headers) => {
 const postRequest = (url, data, callback) => {
   const axiosClient = getAxiosClient();
   axiosClient.post(url, data, {
+    headers: {
+      "Content-Type":"application/json"
+    },
+  })
+  .then((res) => {
+    return callback(null, res.data);
+  })
+  .catch((error) => callback(error));
+};
+
+
+const putRequest = (url, data, callback) => {
+  const axiosClient = getAxiosClient();
+  axiosClient.put(url, data, {
     headers: {
       "Content-Type":"application/json"
     },
@@ -114,6 +133,7 @@ const getUUID = () => v4();
 module.exports ={
   getRequest,
   postRequest,
+  putRequest,
   deleteRequest,
   writeToFile,
   readJSONFile,

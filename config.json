@@ -1,7 +1,20 @@
 {
     "geigerAPIURL": "https://37.48.101.252:8443/geiger-cloud/api",
     "plugin": {
+        "id": "5767657b-2b32-4e47-a827-4591ee889205",
         "name": "Montimage IDS",
         "description": "Montimage IDS aims to protect your devices from cyber-security attacks"
-    }
+    },
+    "company": {
+        "id_company": "montimage-ids",
+        "company_name": "montimage-ids",
+        "public_key": "cf247178-994c-4d30-822e-2b49ecce4600",
+        "company_users": null,
+        "founding_date": "2022-10-05T08:28:14.401Z",
+        "location": "fr",
+        "email": "luongnv89@gmail.com"
+    },
+    "id_company": "montimage-ids",
+    "plugin_id": "5767657b-2b32-4e47-a827-4591ee889205",
+    "plugin_registered": true
 }

@@ -1,6 +1,6 @@
-const {createCompany, loadConfig, registerPlugin, sendSensorData, sendRecommendation, sendRecommendationStatus, getAllCompany, getAllSensorDatas, getAllEventByType, getAllRecommendations, getAllRecommendationStatus, getGeigerInfo, registerPluginWithCompanyId} = require('./geiger-cloud-connector');
+const {createCompany, loadConfig, registerPlugin, sendSensorData, sendRecommendation, sendRecommendationStatus, getAllCompany, getAllSensorDatas, getAllEventByType, getAllRecommendations, getAllRecommendationStatus, getGeigerInfo, registerPluginWithCompanyId, getCompanyEvent, updateEvent, deleteCompanyEvent, getAllCompanyEventIds, deleteAllCompanyEvents} = require('./geiger-cloud-connector');
 
-loadConfig();
+// loadConfig();
 
 // createCompany({
 //   company_name: "Company-02",
@@ -30,11 +30,8 @@ loadConfig();
 //     }
 //   })
 
-// registerPlugin({
-//   id_company: "what-the-hell",
-//   description: "Montimage IDS - provides security reports",
-//   name: "Montimage IDS"
-// }, (data) => {
+// registerPluginWithCompanyId(
+//   "montimage-ids", (data) => {
 //   if (data!=null) {
 //     console.log(data);
 //   }
@@ -53,11 +50,11 @@ loadConfig();
 
 // sendSensorData(
 // {
-//   description: "This is the first data",
+//   description: "This is the metric 0",
 //   flag: '0',
 //   geigerValue: "10",
 //   maxValue: "100",
-//   minValue: 0,
+//   minValue: "0",
 //   relation: "Montimage",
 //   threatsImpact: '1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;',
 //   urgency: 'high',
@@ -68,21 +65,21 @@ loadConfig();
 //   }
 // });
 
-const timestamp = Date.now();
+// const timestamp = Date.now();
 
-sendRecommendation(
-  {
-    action: "",
-    costs: "False",
-    longDescription: `Testing recommendation - ${timestamp}`,
-    recommendationType: "device",
-    relatedThreatsWeights: "1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;",
-    shortDescription: `Recommendation 01 - ${timestamp}`
-}, (result) => {
-  if (result != null) {
-    console.info(result);
-  }
-});
+// sendRecommendation(
+//   {
+//     action: "",
+//     costs: "False",
+//     longDescription: `Testing recommendation - ${timestamp}`,
+//     recommendationType: "device",
+//     relatedThreatsWeights: "1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;",
+//     shortDescription: `Recommendation 01 - ${timestamp}`
+// }, (result) => {
+//   if (result != null) {
+//     console.info(result);
+//   }
+// });
 
 // sendRecommendationStatus("119b3018-0243-45d9-b26b-ea86bfbc859c", (result) => {
 //     if (result != null) {
@@ -110,3 +107,35 @@ sendRecommendation(
 
 // const info = getGeigerInfo();
 // console.log(info);
+
+// getCompanyEvent("5d95742b-4fb5-4f46-9f7f-b10c18d90433", (event)=>{
+//   if (event) {
+//     console.log(event);
+//   }
+// });
+
+// updateEvent("72e40558-185f-4e50-8a05-9705339d7e93", "GEIGER is an awesome project", (newEvent) => {
+//   if (newEvent) {
+//     console.log(newEvent);
+//   }
+// });
+
+// deleteCompanyEvent('72e40558-185f-4e50-8a05-9705339d7e93', (error) => {
+//   if (error) {
+//     console.log(error);
+//   } else {
+//     console.log('OK');
+//   }
+// });
+
+// getAllCompanyEventIds((err, ids) => {
+//   if (err) {
+//     console.log('Failed');
+//     console.log(err);
+//   } else {
+//     console.log('All company event ids');
+//     console.log(ids);
+//   }
+// });
+
+// deleteAllCompanyEvents();
