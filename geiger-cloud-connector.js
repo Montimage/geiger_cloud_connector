@@ -127,8 +127,8 @@ const getAllCompany = (callback) => {
     } else {
       callback(companies);
     }
-  })
-}
+  });
+};
 
 // const deleteCompany = (id_company, callback) => {
 //   const url = `${config.geigerAPIURL}/store/company/${id_company}`;
@@ -430,16 +430,28 @@ const getCompanyEvent = (eventId, callback) => {
 
 const updateEvent = (eventId, content, callback) => {
   console.log(`Going to update event ${eventId} of the company ${config.id_company}`);
+  if (!config.plugin_id) {
+    console.error('Cannot send data. Missing plugin id.');
+    return callback(null);
+  }
+
   getCompanyEvent(eventId, (event) => {
     if (event) {
       const url = `${config.geigerAPIURL}/store/company/${config.id_company}/event/${eventId}`;
       delete event.last_modified;
       delete event.expires;
       delete event.content;
+      console.log('content:');
+      console.log(content);
+      const finalContent = {...content, pluginId: config.plugin.id, pluginName: config.plugin.name};
+      console.log('finalContent:');
+      console.log(finalContent);
       let newEvent = {
         ...event,
-        content: content
+        content: JSON.stringify(finalContent)
       };
+      console.log('putData:');
+      console.log(newEvent);
       putRequest(url, newEvent, (err, result) => {
         if (err) {
           console.log(`Failed to update event (${eventId}) of the company ${config.id_company}: cannot update the event content`);
@@ -564,6 +576,7 @@ const sendRecommendation = ({
     recommendationType,
     relatedThreatsWeights,
     shortDescription,
+    os
   },
   callback,
 ) => {
@@ -598,6 +611,7 @@ const sendRecommendation = ({
     recommendationType,
     relatedThreatsWeights,
     shortDescription,
+    os
   };
   return addEvent({
     content: JSON.stringify(content),
@@ -645,6 +659,7 @@ const sendRecommendationStatus = (
     minValue: "0",
     name: `Recommendation Status of ${recommendationId}`,
     pluginId: config.plugin_id,
+    pluginName: config.plugin?config.plugin.name: "Montimage IDS",
     relation: "device",
     threatsImpact: "",
     urgency: "High",
