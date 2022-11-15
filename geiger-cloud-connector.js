@@ -604,13 +604,13 @@ const sendRecommendation = ({
   const content = {
     action,
     costs,
+    shortDescription,
     longDescription,
     recommendationId: recommendationId,
     pluginId: config.plugin_id,
     pluginName: config.plugin.name,
     recommendationType,
     relatedThreatsWeights,
-    shortDescription,
     os
   };
   return addEvent({

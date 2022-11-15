@@ -1,6 +1,6 @@
 const {createCompany, loadConfig, registerPlugin, sendSensorData, sendRecommendation, sendRecommendationStatus, getAllCompany, getAllSensorDatas, getAllEventByType, getAllRecommendations, getAllRecommendationStatus, getGeigerInfo, registerPluginWithCompanyId, getCompanyEvent, updateEvent, deleteCompanyEvent, getAllCompanyEventIds, deleteAllCompanyEvents} = require('./geiger-cloud-connector');
 
-// loadConfig();
+loadConfig();
 
 // createCompany({
 //   company_name: "Company-02",
@@ -48,22 +48,27 @@ const {createCompany, loadConfig, registerPlugin, sendSensorData, sendRecommenda
 //   }
 // })
 
-// sendSensorData(
-// {
-//   description: "This is the metric 0",
-//   flag: '0',
-//   geigerValue: "10",
-//   maxValue: "100",
-//   minValue: "0",
-//   relation: "Montimage",
-//   threatsImpact: '1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;',
-//   urgency: 'high',
-//   valueType: 'int'
-// }, (result) => {
-//   if (result != null) {
-//     console.info(result);
-//   }
-// });
+sendSensorData(
+{
+  description: JSON.stringify({
+    "en": "test english",
+    "de": "test german",
+    "nl": "test nl",
+    "ru": "test ru"
+  }),
+  flag: '0',
+  geigerValue: "10",
+  maxValue: "100",
+  minValue: "0",
+  relation: "Montimage",
+  threatsImpact: '1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;',
+  urgency: 'high',
+  valueType: 'int'
+}, (result) => {
+  if (result != null) {
+    console.info(result);
+  }
+});
 
 // const timestamp = Date.now();
 
