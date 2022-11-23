@@ -96,6 +96,19 @@ const updateConfig = (callback) => {
   });
 };
 
+const resetConfig = (callback) => {
+  let newConfig = {
+    geigerAPIURL: config.geigerAPIURL,
+    plugin: {
+      name: config.plugin.name,
+      description: config.plugin.description,
+    }
+  }
+
+  config = newConfig;
+  updateConfig(callback);
+}
+
 const updateConfigWithChangedValue = (key, newValue, callback) => {
   config[key] = newValue;
   console.log(`[updateConfigWithChangedValue] Going to save a new config:\n ${JSON.stringify(config)}`);
@@ -870,5 +883,6 @@ module.exports = {
   updateEvent,
   deleteCompanyEvent,
   getAllCompanyEventIds,
-  deleteAllCompanyEvents
+  deleteAllCompanyEvents,
+  resetConfig
 };
