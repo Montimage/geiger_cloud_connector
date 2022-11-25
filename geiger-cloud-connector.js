@@ -245,14 +245,17 @@ const updateCompanyInfo = (id_company, callback) => {
         config.company = company;
         config.plugin.companyName = company.name;
         config.company_name = company.name;
-        updateConfig((newConfig) => {
-          if (!newConfig) {
-            console.log(`Failed to update new config`);
-          }
-          return callback({
-            company
-          });
+        return callback({
+          company
         });
+        // updateConfig((newConfig) => {
+        //   if (!newConfig) {
+        //     console.log(`Failed to update new config`);
+        //   }
+        //   return callback({
+        //     company
+        //   });
+        // });
       }
     });
   }
@@ -289,7 +292,7 @@ const registerPlugin = ({
   id,
   name
 }, callback) => {
-
+  console.log(`Going to register a plugin: ${company_name}, ${id_company}`);
   if (!config.id_company && !id_company) {
     console.error('Missing company id! Cannot register the plugin: ', id);
     return callback({
@@ -310,6 +313,7 @@ const registerPlugin = ({
           error
         });
       } else {
+        console.log(`Back to register plugin: ${JSON.stringify(company)}`);
         return registerPlugin({
           id_company: company.id_company,
           company_name: company.company_name,
@@ -331,7 +335,7 @@ const registerPlugin = ({
         geigerInfo: getGeigerInfo()
       });
     }
-
+    console.log('Going to register the plugin');
     const url = `${config.geigerAPIURL}/plugin`;
     let pluginId = id ? id : (config.plugin_id ? config.plugin_id : uuidv4());
     let postData = {
@@ -369,9 +373,18 @@ const registerPlugin = ({
                 error
               });
             } else {
-              return callback({
-                geigerInfo: getGeigerInfo()
-              });
+              updateConfig((newConfig) => {
+                if (newConfig) {
+                  return callback({
+                    geigerInfo: getGeigerInfo()
+                  });
+                } else {
+                  callback({
+                    error:'Cannot save new config'
+                  });
+                }
+              })
+
             }
           });
         } else {
@@ -441,8 +454,19 @@ const getCompanyEvent = (eventId, callback) => {
   });
 };
 
-const updateEvent = (eventId, content, callback) => {
-  console.log(`Going to update event ${eventId} of the company ${config.id_company}`);
+const updateCompanyEvent = (eventId, {
+  description,
+  flag,
+  geigerValue,
+  maxValue,
+  minValue,
+  name,
+  relation,
+  threatsImpact,
+  urgency,
+  valueType,
+}, callback) => {
+  console.log(`Going to update event company ${eventId} of the company ${config.id_company}`);
   if (!config.plugin_id) {
     console.error('Cannot send data. Missing plugin id.');
     return callback(null);
@@ -454,9 +478,21 @@ const updateEvent = (eventId, content, callback) => {
       delete event.last_modified;
       delete event.expires;
       delete event.content;
-      console.log('content:');
-      console.log(content);
-      const finalContent = {...content, pluginId: config.plugin.id, pluginName: config.plugin.name};
+      const finalContent = {
+        description: JSON.stringify(description),
+        flag,
+        geigerValue,
+        maxValue,
+        minValue,
+        name: name ? name : config.plugin ? config.plugin.name : 'Montimage IDS',
+        pluginName: config.plugin ? config.plugin.name : 'Montimage IDS',
+        pluginId: config.plugin_id,
+        type: "Cloud",
+        relation,
+        threatsImpact,
+        urgency,
+        valueType,
+      };
       console.log('finalContent:');
       console.log(finalContent);
       let newEvent = {
@@ -467,16 +503,75 @@ const updateEvent = (eventId, content, callback) => {
       console.log(newEvent);
       putRequest(url, newEvent, (err, result) => {
         if (err) {
-          console.log(`Failed to update event (${eventId}) of the company ${config.id_company}: cannot update the event content`);
+          console.log(`Failed to update company event (${eventId}) of the company ${config.id_company}: cannot update the event content`);
           console.log(err);
           return callback(null);
         } else {
-          console.log(`Event (${eventId}) of the company ${config.id_company} has been updated`);
+          console.log(`Event company (${eventId}) of the company ${config.id_company} has been updated`);
           return callback(newEvent);
         }
       });
     } else {
-      console.log(`Failed to update event (${eventId}) of the company ${config.id_company}: cannot get the event`);
+      console.log(`Failed to update event company (${eventId}) of the company ${config.id_company}: cannot get the event`);
+      return callback(null);
+    }
+  });
+};
+
+const updateRecommendation = (eventId, {
+  action,
+  costs,
+  longDescription,
+  recommendationId,
+  recommendationType,
+  relatedThreatsWeights,
+  shortDescription,
+  os
+}, callback) => {
+  console.log(`Going to update recommendation ${eventId} of the company ${config.id_company}`);
+  if (!config.plugin_id) {
+    console.error('Cannot send data. Missing plugin id.');
+    return callback(null);
+  }
+
+  getCompanyEvent(eventId, (event) => {
+    if (event) {
+      const url = `${config.geigerAPIURL}/store/company/${config.id_company}/event/${eventId}`;
+      delete event.last_modified;
+      delete event.expires;
+      delete event.content;
+      const finalContent = {
+        action,
+        costs,
+        shortDescription:JSON.stringify(shortDescription),
+        longDescription:JSON.stringify(longDescription),
+        recommendationId: recommendationId,
+        pluginId: config.plugin_id,
+        pluginName: config.plugin.name,
+        recommendationType,
+        relatedThreatsWeights,
+        os
+      };
+      console.log('finalContent:');
+      console.log(finalContent);
+      let newEvent = {
+        ...event,
+        content: JSON.stringify(finalContent)
+      };
+      console.log('putData:');
+      console.log(newEvent);
+      putRequest(url, newEvent, (err, result) => {
+        if (err) {
+          console.log(`Failed to update recommendation (${eventId}) of the company ${config.id_company}: cannot update the event content`);
+          console.log(err);
+          return callback(null);
+        } else {
+          console.log(`Recommendation (${eventId}) of the company ${config.id_company} has been updated`);
+          return callback(newEvent);
+        }
+      });
+    } else {
+      console.log(`Failed to update recommendation (${eventId}) of the company ${config.id_company}: cannot get the event`);
       return callback(null);
     }
   });
@@ -557,13 +652,14 @@ const sendSensorData = ({
   }
 
   const content = {
-    description,
+    description: JSON.stringify(description),
     flag,
     geigerValue,
     maxValue,
     minValue,
     name: name ? name : config.plugin ? config.plugin.name : 'Montimage IDS',
     pluginId: config.plugin_id,
+    type: "Cloud",
     relation,
     threatsImpact,
     urgency,
@@ -617,8 +713,8 @@ const sendRecommendation = ({
   const content = {
     action,
     costs,
-    shortDescription,
-    longDescription,
+    shortDescription:JSON.stringify(shortDescription),
+    longDescription:JSON.stringify(longDescription),
     recommendationId: recommendationId,
     pluginId: config.plugin_id,
     pluginName: config.plugin.name,
@@ -665,7 +761,12 @@ const sendRecommendationStatus = (
   }
 
   const content = {
-    description: "Reflects the status of the recommendation with the indicated ID. geigerValue 0=resolved, 1=active",
+    description: JSON.stringify({
+      en:"Reflects the status of the recommendation with the indicated ID. geigerValue 0=resolved, 1=active",
+      de:"Gibt den Status der Empfehlung mit der angegebenen ID wieder. geigerValue 0=aufgelöst, 1=aktiv",
+      ro:"Reflectă starea recomandării cu ID-ul indicat. geigerValue 0=rezolvat, 1=activ",
+      nl:"Geeft de status van de aanbeveling weer met de aangegeven ID. geigerValue 0=opgelost, 1=actief",
+    }),
     flag: "0",
     geigerValue: "0",
     maxValue: "1",
@@ -676,6 +777,7 @@ const sendRecommendationStatus = (
     relation: "device",
     threatsImpact: "",
     urgency: "High",
+    type: "Cloud",
     recommendationId,
     valueType: "int",
   };
@@ -869,6 +971,7 @@ module.exports = {
   // getPlugin,
   sendSensorData,
   sendRecommendation,
+  updateRecommendation,
   sendRecommendationStatus,
   getAllEventByType,
   getAllSensorDatas,
@@ -880,7 +983,7 @@ module.exports = {
   getConfig,
   registerPluginWithCompanyId,
   getCompanyEvent,
-  updateEvent,
+  updateCompanyEvent,
   deleteCompanyEvent,
   getAllCompanyEventIds,
   deleteAllCompanyEvents,

@@ -48,27 +48,27 @@ loadConfig();
 //   }
 // })
 
-sendSensorData(
-{
-  description: JSON.stringify({
-    "en": "test english",
-    "de": "test german",
-    "nl": "test nl",
-    "ru": "test ru"
-  }),
-  flag: '0',
-  geigerValue: "10",
-  maxValue: "100",
-  minValue: "0",
-  relation: "Montimage",
-  threatsImpact: '1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;',
-  urgency: 'high',
-  valueType: 'int'
-}, (result) => {
-  if (result != null) {
-    console.info(result);
-  }
-});
+// sendSensorData(
+// {
+//   description: JSON.stringify({
+//     "en": "test english",
+//     "de": "test german",
+//     "nl": "test nl",
+//     "ru": "test ru"
+//   }),
+//   flag: '0',
+//   geigerValue: "10",
+//   maxValue: "100",
+//   minValue: "0",
+//   relation: "Montimage",
+//   threatsImpact: '1f3eff0a-1817-4ede-aef7-8c836aecc1c1,High;',
+//   urgency: 'high',
+//   valueType: 'int'
+// }, (result) => {
+//   if (result != null) {
+//     console.info(result);
+//   }
+// });
 
 // const timestamp = Date.now();
 
@@ -143,4 +143,4 @@ sendSensorData(
 //   }
 // });
 
-// deleteAllCompanyEvents();
+deleteAllCompanyEvents();
